@@ -3,8 +3,8 @@ package openie
 import edu.stanford.nlp.ling.CoreAnnotations
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
+import edu.stanford.nlp.simple.Document
 import edu.stanford.nlp.util.CoreMap
-
 import java.util.*
 
 /**
@@ -28,5 +28,17 @@ object CoreNLP {
         // Return sentences of
         return document.get(CoreAnnotations.SentencesAnnotation::class.java)
 
+    }
+
+    fun returnLemma(text: String) : String {
+        val document = Document(text)
+        var lemma = ""
+        for (sentence in document.sentences()) {
+            val lemmaList: List<String> = sentence.lemmas()
+            for (i in 0..lemmaList.size) {
+                lemma += lemmaList[i] + " "
+            }
+        }
+        return lemma
     }
 }

@@ -1,24 +1,72 @@
 import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
+import org.apache.spark.api.java.JavaPairRDD
+import org.apache.spark.api.java.JavaSparkContext
+import scala.Tuple2
+import java.io.BufferedWriter
+import java.io.FileWriter
 
 /**
  * @author djyuhn
- * 2/19/2019
+ * 2/20/2019
  */
-object Main {
-    fun main(args: Array<String>) {
+fun main(args: Array<String>) {
+    val terrainTypesFile = "data/categories/terrain_types.txt"
+    val gccFile = "data/GCC_set/Train_GCC-training.tsv"
+    val categorizedFolder = "data/categorized/"
 
-        // For Windows Users
-        System.setProperty("hadoop.home.dir", "C:\\winutils")
+    // For Windows Users
+    System.setProperty("hadoop.home.dir", "C:\\winutils")
 
-        // Configuration
-        val sparkConf = SparkConf().setAppName("Lab1")
-                .setMaster("local[*]")
-                .set("spark.executor.memory", "8g")
-                .set("spark.driver.memory", "4g")
+    // Configuration
+    val sparkConf = SparkConf().setAppName("Lab1")
+            .setMaster("local[*]")
 
-        val sc = SparkContext(sparkConf)
+    val sc = JavaSparkContext(sparkConf)
 
+    val categoryFile = sc.textFile(terrainTypesFile)
 
+    val categoryTuple = categoryFile.mapToPair {line ->
+        val splitLine = line.toLowerCase().split("\t")
+        var synonyms: List<String> = emptyList()
+        if (splitLine.size > 1) {
+            synonyms = splitLine.drop(1)
+        }
+
+        Tuple2(splitLine[0], synonyms)
+
+    }
+
+    val categoryBroadcast = sc.broadcast(categoryTuple.collectAsMap())
+
+    val googleFile = sc.textFile(gccFile).map{line ->
+        val categorized = StringBuilder()
+
+        val splitLine = line.split("\t")
+        val tuple = categoryBroadcast.value
+
+        tuple.forEach{(key, value) ->
+            if (splitLine[0].contains(key))
+                categorized.append(key).append("\t").append(line)
+            else {
+                for (word in value) {
+                    if (splitLine[0].contains(word)) {
+                        categorized.append(key).append("\t").append(line)
+                        break
+                    }
+                }
+            }
+        }
+
+        categorized.toString()
+    }
+
+    val categorizedGoogleImages = BufferedWriter(FileWriter(categorizedFolder + "google_images.txt"))
+
+    googleFile.collect().forEach{ file ->
+        val splitLines = file.split("\n")
+        splitLines.forEach { line ->
+            if (!line.equals(""))
+                categorizedGoogleImages.append(line).append("\n")
+        }
     }
 }
