@@ -1,5 +1,6 @@
+package google_images
+
 import org.apache.spark.SparkConf
-import org.apache.spark.api.java.JavaPairRDD
 import org.apache.spark.api.java.JavaSparkContext
 import scala.Tuple2
 import java.io.BufferedWriter
@@ -45,12 +46,14 @@ fun main(args: Array<String>) {
         val tuple = categoryBroadcast.value
 
         tuple.forEach{(key, value) ->
-            if (splitLine[0].contains(key))
-                categorized.append(key).append("\t").append(line)
+            val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
+            if (splitLine[0].contains(key_regex))
+                categorized.append(key).append("\t").append(splitLine[0]).append("\t").append(splitLine[1]).append("\n")
             else {
                 for (word in value) {
-                    if (splitLine[0].contains(word)) {
-                        categorized.append(key).append("\t").append(line)
+                    val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
+                    if (splitLine[0].matches(word_regex)) {
+                        categorized.append(key).append("\t").append(splitLine[0]).append("\t").append(splitLine[1]).append("\n")
                         break
                     }
                 }
@@ -58,7 +61,7 @@ fun main(args: Array<String>) {
         }
 
         categorized.toString()
-    }
+    }.filter{ it != ""}
 
     val categorizedGoogleImages = BufferedWriter(FileWriter(categorizedFolder + "google_images.txt"))
 

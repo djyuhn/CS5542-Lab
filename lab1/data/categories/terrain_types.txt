@@ -1,7 +1,7 @@
 Canyon
 Cave
 Desert	Dune
-Forest	Jungle	Taiga
+Forest	Jungle	Taiga	Woods	Wooded	Woodland
 Glacier
 Hill
 Lake	Pond

@@ -25,17 +25,18 @@ object CoreNLP {
         // Run annotators on text
         pipeline.annotate(document)
 
-        // Return sentences of
+        // Return sentences
         return document.get(CoreAnnotations.SentencesAnnotation::class.java)
 
     }
 
     fun returnLemma(text: String) : String {
+
         val document = Document(text)
         var lemma = ""
         for (sentence in document.sentences()) {
             val lemmaList: List<String> = sentence.lemmas()
-            for (i in 0..lemmaList.size) {
+            for (i in 0 until lemmaList.size) {
                 lemma += lemmaList[i] + " "
             }
         }

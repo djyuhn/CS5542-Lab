@@ -1,9 +1,13 @@
 package image_retrieve
 
+import org.apache.commons.io.FileUtils
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
 import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import javax.imageio.ImageIO
 
 /**
@@ -12,18 +16,16 @@ import javax.imageio.ImageIO
  */
 object ImageRetrieval  {
 
-    fun getURLImage(imageURL: String) {
+    fun getURLImage(imageURL: String, destination: String) {
         try {
             val url = URL(imageURL)
-            val image: BufferedImage = ImageIO.read(url)
-            val fileName: String = url.file
-            val destinationName: String = "./images" + fileName.substring(fileName.lastIndexOf("/"))
+            val filename = url.file
+            val file = File(destination + "/images/" + filename.substring(filename.lastIndexOf("/")))
 
-            ImageIO.write(image, "png", File(destinationName))
+            FileUtils.copyURLToFile(url, file)
         }
-
-        catch(e: IOException) {
-            e.printStackTrace()
+        catch (e: IOException){
+            e.stackTrace
         }
 
     }
