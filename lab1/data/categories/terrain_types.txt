@@ -8,6 +8,7 @@ Lake	Pond
 Mountain	Volcano
 Plain	Prairie	Savanna
 Ocean	Archipelago	Iceberg	Island	Shore	Coast	Reef	Sea
+Coast	Shore	Sea
 River	Stream	Creek	Brook
 Tundra
 Wetland	Bog	Marsh	Swamp
@@ -20,3 +21,10 @@ Town
 City
 Farm
 Train
+House	Home
+Hospital
+Library
+Marketplace	Store
+Mall
+Skyscraper
+Building
