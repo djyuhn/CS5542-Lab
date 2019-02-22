@@ -48,12 +48,12 @@ fun main(args: Array<String>) {
         tuple.forEach{(key, value) ->
             val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
             if (splitLine[1].contains(key_regex))
-                categorized.append(key).append("\t").append(splitLine[0]).append("\t").append(splitLine[1]).append("\n")
+                categorized.append(key).append("\t").append(splitLine[1]).append("\t").append(splitLine[0]).append("\n")
             else {
                 for (word in value) {
                     val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
                     if (splitLine[1].matches(word_regex)) {
-                        categorized.append(key).append("\t").append(splitLine[0]).append("\t").append(splitLine[1]).append("\n")
+                        categorized.append(key).append("\t").append(splitLine[1]).append("\t").append(splitLine[0]).append("\n")
                         break
                     }
                 }
@@ -63,13 +63,13 @@ fun main(args: Array<String>) {
         categorized.toString()
     }.filter{ it != ""}
 
-    val categorizedGoogleImages = BufferedWriter(FileWriter(categorizedFolder + "flickr_images.txt"))
+    val categorizedFlikrImages = BufferedWriter(FileWriter(categorizedFolder + "flickr_images.txt"))
 
     googleFile.collect().forEach{ file ->
         val splitLines = file.split("\n")
         splitLines.forEach { line ->
             if (!line.equals(""))
-                categorizedGoogleImages.append(line).append("\n")
+                categorizedFlikrImages.append(line).append("\n")
         }
     }
 }

@@ -17,7 +17,7 @@ fun main(args:Array<String>) {
         bufferedReader.forEachLine { line ->
             val splitLine = line.split("\t")
             if (splitLine.size == 3) {
-                val filename = splitLine[1].substring(0, splitLine[1].length - 2)
+                val filename = splitLine[2].substring(0, splitLine[2].length - 2)
                 val category = splitLine[0]
                 val file = File(flickrImageDirectory + filename)
                 val copyFile = File(flickrCategorizedImageDirectory + category + "/" + filename)
