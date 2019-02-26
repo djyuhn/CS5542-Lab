@@ -11,7 +11,7 @@ import java.io.FileWriter
  * 2/20/2019
  */
 fun main(args: Array<String>) {
-    val terrainTypesFile = "data/categories/terrain_types.txt"
+    val terrainTypesFile = "data/categories/categories.txt"
     val flickrLemmaFile = "data/flicker/Flickr8k.lemma.token.txt"
     val categorizedFolder = "data/categorized/"
 

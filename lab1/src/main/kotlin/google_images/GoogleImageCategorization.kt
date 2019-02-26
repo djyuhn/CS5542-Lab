@@ -11,7 +11,7 @@ import java.io.FileWriter
  * 2/20/2019
  */
 fun main(args: Array<String>) {
-    val terrainTypesFile = "data/categories/terrain_types.txt"
+    val terrainTypesFile = "data/categories/categories.txt"
     val gccFile = "data/GCC_set/Train_GCC-training.tsv"
     val categorizedFolder = "data/categorized/"
 

@@ -1,11 +1,12 @@
 package coco_images
 
+import openie.CoreNLP
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.JavaSparkContext
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.Row
 import scala.Tuple2
-import scala.util.parsing.json.`package`
 import java.io.BufferedWriter
 import java.io.FileWriter
 
@@ -14,18 +15,26 @@ import java.io.FileWriter
  * 2/20/2019
  */
 fun main(args: Array<String>) {
-    val terrainTypesFile = "data/categories/terrain_types.txt"
-    val cocoFilePath = "data/COCO/captions_train2017_2.json"
+    val terrainTypesFile = "data/categories/categories.txt"
+    val cocoFilePath = "data/COCO/captions_train2017.json"
     val categorizedFolder = "data/categorized/"
 
     // For Windows Users
     System.setProperty("hadoop.home.dir", "C:\\winutils")
 
+//    val spark = SparkSession
+//            .builder()
+//            .appName("Lab1")
+//            .master("local[*]")
+//            .config("spark.driver.memory", "8g")
+//            .config("spark.executor.memory", "4g")
+//            .orCreate
+
     // Configuration
     val sparkConf = SparkConf().setAppName("Lab1")
             .setMaster("local[*]")
             .set("spark.executor.memory", "4g")
-            .set("spark.driver.memory", "10gb")
+            .set("spark.driver.memory", "10g")
 
     val sc = JavaSparkContext(sparkConf)
     val sqlContext = SQLContext(sc)
@@ -45,38 +54,45 @@ fun main(args: Array<String>) {
 
     val categoryBroadcast = sc.broadcast(categoryTuple.collectAsMap())
 
-    val cocoFile = sc.textFile(cocoFilePath)
-    val jsonContents = sqlContext.read().json(cocoFilePath).toJavaRDD()
+    val jsonContents = sqlContext.read().json(cocoFilePath)
 
-    val imageCaptions = jsonContents.map{ line ->
-        val categorized = StringBuilder()
-        val caption = line.get(0).toString()
-        val imageID = line.get(2).toString()
+    val imageContents: Array<out Row> = jsonContents.select("annotations").collect() as Array<out Row>
+    val imageCaptions = imageContents.map{row -> row.getSeq<Row>(0) }
+            .map{image ->
+                val categorized = StringBuilder()
+                val tuple = categoryBroadcast.value
 
-        val tuple = categoryBroadcast.value
+                image.foreach{ row: Row ->
+                    val imageID = row.getLong(2)
+                    val caption = row.getString(0)
 
-        tuple.forEach{(key, value) ->
-            val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
-            if (caption.contains(key_regex))
-                categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
-            else {
-                for (word in value) {
-                    val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
-                    if (caption.matches(word_regex)) {
-                        categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
-                        break
+                    tuple.forEach{(key, value) ->
+                        val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
+                        if (caption.contains(key_regex)) {
+                            val lemma = CoreNLP.returnLemma(caption)
+                            categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+                        }
+                        else {
+                            for (word in value) {
+                                val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
+                                if (caption.matches(word_regex)) {
+                                    val lemma = CoreNLP.returnLemma(caption)
+                                    categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+                                    break
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        categorized.toString()
-    }
+                categorized.toString()
+            }
+
 
     val categorizedCOCOImages = BufferedWriter(FileWriter(categorizedFolder + "coco_images.txt"))
 
-    imageCaptions.collect().forEach{ file ->
-        val splitLines = file.split("\n")
+    imageCaptions.forEach{ image ->
+        val splitLines = image.split("\n")
         splitLines.forEach { line ->
             if (!line.equals(""))
                 categorizedCOCOImages.append(line).append("\n")
