@@ -1,0 +1,29 @@
+Canyon
+Cave
+Desert	Dune
+Forest	Jungle	Taiga	Woods	Wooded	Woodland
+Glacier
+Hill
+Lake	Pond
+Mountain	Volcano
+Plain	Prairie	Savanna
+Ocean	Archipelago	Iceberg	Island	Shore	Coast	Reef	Sea
+Coast	Shore	Sea
+River	Stream	Creek	Brook
+Tundra
+Wetland	Bog	Marsh	Swamp
+Architecture
+Bridge
+Canal
+Hamlet
+Village
+Town
+City
+Farm
+House	Home	Dwelling
+Hospital
+Library
+Marketplace	Store
+Mall
+Skyscraper
+Building
