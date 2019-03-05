@@ -12,7 +12,7 @@ Coast	Shore	Sea
 River	Stream	Creek	Brook
 Tundra
 Wetland	Bog	Marsh	Swamp
-Architecture	Building	Skyscraper	House	Hospital	Library	Marketplace	Mall
+Architecture
 Bridge
 Canal
 Hamlet
