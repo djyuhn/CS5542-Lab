@@ -48,6 +48,39 @@ fun main(args: Array<String>) {
 
     val jsonContents = sqlContext.read().json(cocoFilePath)
 
+    //To categorize images and lemmatize captions
+//    val imageContents: Array<out Row> = jsonContents.select("annotations").collect() as Array<out Row>
+//    val imageCaptions = imageContents.map{row -> row.getSeq<Row>(0) }
+//            .map{image ->
+//                val categorized = StringBuilder()
+//                val tuple = categoryBroadcast.value
+//
+//                image.foreach{ row: Row ->
+//                    val imageID = row.getLong(2)
+//                    val caption = row.getString(0)
+//
+//                    tuple.forEach{(key, value) ->
+//                        val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
+//                        if (caption.contains(key_regex)) {
+//                            val lemma = CoreNLP.returnLemma(caption)
+//                            categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+//                        }
+//                        else {
+//                            for (word in value) {
+//                                val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
+//                                if (caption.matches(word_regex)) {
+//                                    val lemma = CoreNLP.returnLemma(caption)
+//                                    categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+//                                    break
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                categorized.toString()
+//            }
+
+    //To categorize images and maintain original captions
     val imageContents: Array<out Row> = jsonContents.select("annotations").collect() as Array<out Row>
     val imageCaptions = imageContents.map{row -> row.getSeq<Row>(0) }
             .map{image ->
@@ -61,15 +94,13 @@ fun main(args: Array<String>) {
                     tuple.forEach{(key, value) ->
                         val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
                         if (caption.contains(key_regex)) {
-                            val lemma = CoreNLP.returnLemma(caption)
-                            categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+                            categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
                         }
                         else {
                             for (word in value) {
                                 val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
-                                if (caption.matches(word_regex)) {
-                                    val lemma = CoreNLP.returnLemma(caption)
-                                    categorized.append(key).append("\t").append(lemma).append("\t").append(imageID).append("\n")
+                                if (caption.contains(word_regex)) {
+                                    categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
                                     break
                                 }
                             }
@@ -80,7 +111,7 @@ fun main(args: Array<String>) {
             }
 
 
-    val categorizedCOCOImages = BufferedWriter(FileWriter(categorizedFolder + "coco_images.txt"))
+    val categorizedCOCOImages = BufferedWriter(FileWriter(categorizedFolder + "coco_images_original.txt"))
 
     imageCaptions.forEach{ image ->
         val splitLines = image.split("\n")
@@ -89,4 +120,6 @@ fun main(args: Array<String>) {
                 categorizedCOCOImages.append(line).append("\n")
         }
     }
+
+    categorizedCOCOImages.close()
 }
