@@ -79,3 +79,7 @@ fabric.properties
 
 .idea
 CS5542-Lab.iml
+Lab3/Keras/data/Flicker8k_Dataset
+Lab3/Keras/model
+Lab3/Keras/nlg-eval-master
+Lab3/Keras/venv
