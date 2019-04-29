@@ -10,19 +10,16 @@ import java.io.IOException
 
 fun main(args:Array<String>) {
 
-    val imageDirectory = "C:\\School\\Images\\MSCOCO\\val2017\\"
-    val categorizedImageDirectory = "C:\\School\\Images\\categorized\\combined_val\\"
-    val readFile = "data/categorized/coco_images_val.txt"
+    val imageDirectory = "D:\\School\\BigData-Lab4\\Images\\MSCOCO\\val2017\\"
+    val categorizedImageDirectory = "D:\\School\\BigData-Lab4\\Images\\categorized\\coco_val\\"
+    val readFile = "data/categorized/coco_val_ids.txt"
     try {
-        val bufferedReader = File(readFile).bufferedReader()
-        bufferedReader.forEachLine { line ->
-            val splitLine = line.split("\t")
-            if (splitLine.size == 3) {
-                val filename = splitLine[2]
-                val file = File("$imageDirectory$filename.jpg")
-                val copyFile = File("$categorizedImageDirectory/$filename.jpg")
-                file.copyTo(copyFile, overwrite = true)
-            }
+        val bufferedReader = File(readFile).bufferedReader().readLines()
+        bufferedReader.forEach { line ->
+            val filename = line.replace("\\s".toRegex(), "")
+            val file = File("$imageDirectory/$filename.jpg")
+            val copyFile = File("$categorizedImageDirectory/$filename.jpg")
+            file.copyTo(copyFile, overwrite = true)
         }
     }
     catch (e: IOException) {

@@ -138,7 +138,7 @@ def evaluate_model(model, descriptions, photos, tokenizer, max_length):
 
     # calculate metrics
     # Create NLG object to load models
-    nlgeval = NLGEval()
+    nlgeval = NLGEval(False, ['METEOR'])
     metrics_dict = nlgeval.compute_metrics(ref_list=actual, hyp_list=predicted)
     with open("processed_data/metrics.txt", "w") as metrics_file:
         for key, value in metrics_dict.items():
@@ -150,8 +150,7 @@ def evaluate_model(model, descriptions, photos, tokenizer, max_length):
 if __name__ == "__main__":
     # prepare tokenizer on train set
 
-    # load training dataset (6K)
-    filename = 'data/Flickr8k_Texts/Flickr_8k.trainImages.txt'
+    filename = 'data/texts/all_train_image_ids.txt'
     train = load_set(filename)
     print('Dataset: %d' % len(train))
     # descriptions
@@ -168,7 +167,7 @@ if __name__ == "__main__":
     # prepare test set
 
     # load test set
-    filename = 'data/Flickr8k_Texts/Flickr_8k.testImages.txt'
+    filename = 'data/texts/validation_image_ids.txt'
     test = load_set(filename)
     print('Dataset: %d' % len(test))
     # descriptions
@@ -179,7 +178,7 @@ if __name__ == "__main__":
     print('Photos: test=%d' % len(test_features))
 
     # load the model
-    filename = 'model/model-ep005-loss3.668-val_loss3.897.h5'
+    filename = 'model/model_0.h5'
     model = load_model(filename)
     # evaluate model
     evaluate_model(model, test_descriptions, test_features, tokenizer, max_length)

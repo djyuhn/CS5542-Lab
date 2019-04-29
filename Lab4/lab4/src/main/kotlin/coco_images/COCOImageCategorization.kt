@@ -16,7 +16,7 @@ import java.io.FileWriter
  */
 fun main(args: Array<String>) {
     val terrainTypesFile = "data/categories/categories.txt"
-    val cocoFilePath = "C:\\School\\Images\\MSCOCO\\texts\\captions_train2017.json"
+    val cocoFilePath = "D:\\School\\BigData-Lab4\\Images\\MSCOCO\\texts\\captions_val2017.json"
     val categorizedFolder = "data/categorized/"
 
     // For Windows Users
@@ -62,13 +62,13 @@ fun main(args: Array<String>) {
                     tuple.forEach{(key, value) ->
                         val key_regex = Regex("(?:^|\\W)$key(?:\$|\\W)")
                         if (caption.contains(key_regex)) {
-                            categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
+                            categorized.append(imageID).append("\n")
                         }
                         else {
                             for (word in value) {
                                 val word_regex = Regex("(?:^|\\W)$word(?:\$|\\W)")
                                 if (caption.contains(word_regex)) {
-                                    categorized.append(key).append("\t").append(caption).append("\t").append(imageID).append("\n")
+                                    categorized.append(imageID).append("\n")
                                     break
                                 }
                             }
@@ -76,17 +76,22 @@ fun main(args: Array<String>) {
                     }
                 }
                 categorized.toString()
-            }
+            }.distinct()
 
 
-    val categorizedCOCOImages = BufferedWriter(FileWriter(categorizedFolder + "coco_images_original_train.txt"))
+    val categorizedCOCOImages = BufferedWriter(FileWriter(categorizedFolder + "coco_val_ids.txt"))
 
+    val image_ids = hashSetOf<String>()
     imageCaptions.forEach{ image ->
         val splitLines = image.split("\n")
         splitLines.forEach { line ->
             if (!line.equals(""))
-                categorizedCOCOImages.append(line).append("\n")
+                image_ids.add(line);
         }
+    }
+
+    image_ids.forEach{ id ->
+        categorizedCOCOImages.append(id).append("\n")
     }
 
     categorizedCOCOImages.close()

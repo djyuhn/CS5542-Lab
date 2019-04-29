@@ -1,3 +1,6 @@
+import plaidml.keras
+plaidml.keras.install_backend()
+
 from os import listdir
 from pickle import dump
 from keras.applications.vgg16 import VGG16
@@ -40,7 +43,7 @@ def extract_features(directory):
 
 if __name__ == "__main__":
     # extract features from all images
-    directory = 'data/Flicker8k_Dataset'
+    directory = 'D:/School/BigData-Lab4/Images/categorized/combined_all'
     features = extract_features(directory)
     print('Extracted Features: %d' % len(features))
     # save to file

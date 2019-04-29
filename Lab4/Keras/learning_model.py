@@ -13,6 +13,7 @@ from keras.layers import Dropout
 from keras.layers.merge import add
 from keras.callbacks import ModelCheckpoint
 
+
 # load doc into memory
 def load_doc(filename):
     # open the file as read only
@@ -22,6 +23,7 @@ def load_doc(filename):
     # close the file
     file.close()
     return text
+
 
 # load a pre-defined list of photo identifiers
 def load_set(filename):
@@ -36,6 +38,7 @@ def load_set(filename):
         identifier = line.split('.')[0]
         dataset.append(identifier)
     return set(dataset)
+
 
 # load clean descriptions into memory
 def load_clean_descriptions(filename, dataset):
@@ -58,6 +61,7 @@ def load_clean_descriptions(filename, dataset):
             descriptions[image_id].append(desc)
     return descriptions
 
+
 # load photo features
 def load_photo_features(filename, dataset):
     # load all features
@@ -66,12 +70,14 @@ def load_photo_features(filename, dataset):
     features = {k: all_features[k] for k in dataset}
     return features
 
+
 # covert a dictionary of clean descriptions to a list of descriptions
 def to_lines(descriptions):
     all_desc = list()
     for key in descriptions.keys():
         [all_desc.append(d) for d in descriptions[key]]
     return all_desc
+
 
 # fit a tokenizer given caption descriptions
 def create_tokenizer(descriptions):
@@ -80,48 +86,73 @@ def create_tokenizer(descriptions):
     tokenizer.fit_on_texts(lines)
     return tokenizer
 
+
 # calculate the length of the description with the most words
 def max_length(descriptions):
     lines = to_lines(descriptions)
     return max(len(d.split()) for d in lines)
 
+
+# # create sequences of images, input sequences and output words for an image
+# def create_sequences(tokenizer, max_length, descriptions, photos):
+#     X1, X2, y = list(), list(), list()
+#     # walk through each image identifier
+#     for key, desc_list in descriptions.items():
+#         # walk through each description for the image
+#         for desc in desc_list:
+#             # encode the sequence
+#             seq = tokenizer.texts_to_sequences([desc])[0]
+#             # split one sequence into multiple X,y pairs
+#             for i in range(1, len(seq)):
+#                 # split into input and output pair
+#                 in_seq, out_seq = seq[:i], seq[i]
+#                 # pad input sequence
+#                 in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
+#                 # encode output sequence
+#                 out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+#                 # store
+#                 X1.append(photos[key][0])
+#                 X2.append(in_seq)
+#                 y.append(out_seq)
+#     return array(X1), array(X2), array(y)
+
+# Due to RAM limitation, must create model in batches.
 # create sequences of images, input sequences and output words for an image
-def create_sequences(tokenizer, max_length, descriptions, photos):
+def create_sequences(tokenizer, max_length, desc_list, photo):
     X1, X2, y = list(), list(), list()
-    # walk through each image identifier
-    for key, desc_list in descriptions.items():
-        # walk through each description for the image
-        for desc in desc_list:
-            # encode the sequence
-            seq = tokenizer.texts_to_sequences([desc])[0]
-            # split one sequence into multiple X,y pairs
-            for i in range(1, len(seq)):
-                # split into input and output pair
-                in_seq, out_seq = seq[:i], seq[i]
-                # pad input sequence
-                in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
-                # encode output sequence
-                out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
-                # store
-                X1.append(photos[key][0])
-                X2.append(in_seq)
-                y.append(out_seq)
+    # walk through each description for the image
+    for desc in desc_list:
+        # encode the sequence
+        seq = tokenizer.texts_to_sequences([desc])[0]
+        # split one sequence into multiple X,y pairs
+        for i in range(1, len(seq)):
+            # split into input and output pair
+            in_seq, out_seq = seq[:i], seq[i]
+            # pad input sequence
+            in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
+            # encode output sequence
+            out_seq = to_categorical([out_seq], num_classes=vocab_size)[0]
+            # store
+            X1.append(photo)
+            X2.append(in_seq)
+            y.append(out_seq)
     return array(X1), array(X2), array(y)
+
 
 # define the captioning model
 def define_model(vocab_size, max_length):
     # feature extractor model
     inputs1 = Input(shape=(4096,))
-    fe1 = Dropout(0.5)(inputs1)
-    fe2 = Dense(128, activation='relu')(fe1)
+    fe1 = Dropout(0.6)(inputs1)
+    fe2 = Dense(32, activation='relu')(fe1)
     # sequence model
     inputs2 = Input(shape=(max_length,))
-    se1 = Embedding(vocab_size, 128, mask_zero=True)(inputs2)
-    se2 = Dropout(0.5)(se1)
-    se3 = LSTM(128)(se2)
+    se1 = Embedding(vocab_size, 32, input_length=max_length)(inputs2)
+    se2 = Dropout(0.6)(se1)
+    se3 = LSTM(32)(se2)
     # decoder model
     decoder1 = add([fe2, se3])
-    decoder2 = Dense(128, activation='relu')(decoder1)
+    decoder2 = Dense(32, activation='relu')(decoder1)
     outputs = Dense(vocab_size, activation='softmax')(decoder2)
     # tie it together [image, seq] [word]
     model = Model(inputs=[inputs1, inputs2], outputs=outputs)
@@ -131,12 +162,24 @@ def define_model(vocab_size, max_length):
     plot_model(model, to_file='model.png', show_shapes=True)
     return model
 
+    # Used to help with training model in batches due to RAM limitation
+    # data generator, intended to be used in a call to model.fit_generator()
+def data_generator(descriptions, photos, tokenizer, max_length):
+    # loop for ever over images
+    while 1:
+        for key, desc_list in descriptions.items():
+            # retrieve the photo feature
+            photo = photos[key][0]
+            in_img, in_seq, out_word = create_sequences(tokenizer, max_length, desc_list, photo)
+            yield [[in_img, in_seq], out_word]
+
+
 if __name__ == "__main__":
 
     # train dataset
 
-    # load training dataset (6K)
-    filename = 'data/Flickr8k_texts/Flickr_8k.trainImages.txt'
+    # load training dataset
+    filename = 'data/texts/all_train_image_ids.txt'
     train = load_set(filename)
     print('Dataset: %d' % len(train))
     # descriptions
@@ -158,7 +201,7 @@ if __name__ == "__main__":
     # dev dataset
 
     # load test set
-    filename = 'data/Flickr8k_Texts/Flickr_8k.devImages.txt'
+    filename = 'data/texts/validation_image_ids.txt'
     test = load_set(filename)
     print('Dataset: %d' % len(test))
     # descriptions
@@ -172,10 +215,24 @@ if __name__ == "__main__":
 
     # fit model
 
+    # # define the model
+    # model = define_model(vocab_size, max_length)
+    # # define checkpoint callback
+    # filepath = 'model/model-ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'
+    # checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    # # fit model
+    # model.fit([X1train, X2train], ytrain, epochs=10, verbose=2, callbacks=[checkpoint], validation_data=([X1test, X2test], ytest))
+
+    # Due to RAM limitation, must train model in batches
     # define the model
     model = define_model(vocab_size, max_length)
-    # define checkpoint callback
-    filepath = 'model/model-ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'
-    checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    # fit model
-    model.fit([X1train, X2train], ytrain, epochs=5, verbose=2, callbacks=[checkpoint], validation_data=([X1test, X2test], ytest))
+    # train the model, run epochs manually and save after each epoch
+    epochs = 1
+    steps = len(train_descriptions)
+    for i in range(epochs):
+        # create the data generator
+        generator = data_generator(train_descriptions, train_features, tokenizer, max_length)
+        # fit for one epoch
+        model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
+        # save model
+        model.save('model_' + str(i) + '.h5')

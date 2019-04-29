@@ -72,7 +72,7 @@ def save_descriptions(descriptions, filename):
 
 
 if __name__ == "__main__":
-    filename = 'data/Flickr8k_Texts/Flickr8k.token.txt'
+    filename = 'data/texts/all_images_captions_keras.txt'
     # load descriptions
     doc = load_doc(filename)
     # parse descriptions

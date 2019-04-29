@@ -61,8 +61,8 @@ def create_tokenizer(descriptions):
     return tokenizer
 
 if __name__ == "__main__":
-    # load training dataset (6K)
-    filename = 'data/Flickr8k_Texts/Flickr_8k.trainImages.txt'
+    # load training dataset
+    filename = 'data/texts/all_train_image_ids.txt'
     train = load_set(filename)
     print('Dataset: %d' % len(train))
     # descriptions
